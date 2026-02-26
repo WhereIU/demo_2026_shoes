@@ -9,34 +9,41 @@ from django.db import models
 
 
 class Categories(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
 
     class Meta:
         managed = False
         db_table = 'categories'
 
+    def __str__(self):
+        return self.name
+
 
 class Manufacturers(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
 
     class Meta:
         managed = False
         db_table = 'manufacturers'
 
+    def __str__(self):
+        return self.name
 
 class OrderStatuses(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
 
     class Meta:
         managed = False
         db_table = 'order_statuses'
 
+    def __str__(self):
+        return self.name
 
 class Orders(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     order_date = models.DateField()
     delivery_date = models.DateField()
     pickup_point = models.ForeignKey('PickupPoints', models.DO_NOTHING)
@@ -48,9 +55,11 @@ class Orders(models.Model):
         managed = False
         db_table = 'orders'
 
+    def __str__(self):
+        return self.name
 
 class PickupPoints(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     index = models.IntegerField()
     city = models.CharField(max_length=50)
     street = models.CharField(max_length=50)
@@ -60,18 +69,22 @@ class PickupPoints(models.Model):
         managed = False
         db_table = 'pickup_points'
 
+    def __str__(self):
+        return self.name
 
 class ProductTypes(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
 
     class Meta:
         managed = False
         db_table = 'product_types'
 
+    def __str__(self):
+        return self.name
 
 class Products(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     article = models.CharField(max_length=30)
     product_type = models.ForeignKey(ProductTypes, models.DO_NOTHING)
     unit = models.ForeignKey('Units', models.DO_NOTHING)
@@ -88,9 +101,25 @@ class Products(models.Model):
         managed = False
         db_table = 'products'
 
+    def discounted_price(self):
+        if self.current_discount and self.current_discount > 0:
+            price = float(self.price)
+            discount = float(self.current_discount)
+            return price * (1 - discount / 100)
+        return float(self.price)
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            last_id = Products.objects.aggregate(models.Max('id'))['id__max'] or 0
+            self.id = last_id + 1
+        super().save(*args, **kwargs)
+
+
+    def __str__(self):
+        return self.name
 
 class ProductsInOrders(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     order = models.ForeignKey(Orders, models.DO_NOTHING)
     product = models.ForeignKey(Products, models.DO_NOTHING)
     amount = models.IntegerField()
@@ -99,36 +128,45 @@ class ProductsInOrders(models.Model):
         managed = False
         db_table = 'products_in_orders'
 
+    def __str__(self):
+        return self.name
 
 class Providers(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
 
     class Meta:
         managed = False
         db_table = 'providers'
 
+    def __str__(self):
+        return self.name
+
 
 class Roles(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
 
     class Meta:
         managed = False
         db_table = 'roles'
 
+    def __str__(self):
+        return self.name
 
 class Units(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
 
     class Meta:
         managed = False
         db_table = 'units'
 
+    def __str__(self):
+        return self.name
 
 class Users(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     role = models.ForeignKey(Roles, models.DO_NOTHING)
     surname = models.CharField(max_length=50)
     firstname = models.CharField(max_length=50)
@@ -139,3 +177,6 @@ class Users(models.Model):
     class Meta:
         managed = False
         db_table = 'users'
+    
+    def __str__(self):
+        return self.name

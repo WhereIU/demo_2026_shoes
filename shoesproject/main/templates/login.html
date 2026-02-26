@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<h2>Вход</h2>
+<form method="post" action="{% url 'main_login' %}">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Войти</button>
+</form>
+
+<a href="{% url 'main_guest_login' %}">Войти как гость</a>
+
+{% if form.non_field_errors %}
+<ul class="errorlist">
+  {% for error in form_non_field_errors %}
+  <li>{{ error }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

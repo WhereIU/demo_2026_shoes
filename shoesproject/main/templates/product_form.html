@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if edit_mode %}Редактирование{% else %}Добавление{% endif %} товара{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <h2>{% if edit_mode %}Редактирование товара{% else %}Добавление нового товара{% endif %}</h2>
+    
+    <form method="post" enctype="multipart/form-data" style="max-width: 600px; margin: 0 auto;">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <ul class="errorlist">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        
+        {% for field in form %}
+            <div class="form-group">
+                {{ field.label_tag }}
+                
+                {% if field.name == 'img_path' and edit_mode and product.img_path %}
+                    <div style="margin-bottom: 10px;">
+                        <p>Текущее изображение:</p>
+                        <img src="{{ MEDIA_URL }}{{ product.img_path }}" alt="Текущее фото" style="max-width: 200px; max-height: 200px;">
+                        <p><small>Оставьте поле пустым, чтобы не менять изображение</small></p>
+                    </div>
+                {% endif %}
+                
+                {{ field }}
+                
+                {% if field.help_text %}
+                    <small class="help-text">{{ field.help_text }}</small>
+                {% endif %}
+                
+                {% if field.errors %}
+                    <ul class="errorlist">
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        {% endfor %}
+        
+        <div class="form-group" style="margin-top: 20px;">
+            <button type="submit" class="btn btn-success">Сохранить</button>
+            <a href="{% url 'main_product_list' %}" class="btn btn-primary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Удаление товара{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <h2>Удаление товара</h2>
+    
+    <div class="delete-container">
+        {% if in_orders %}
+            <div class="delete-warning">
+                Невозможно удалить товар "{{ product.article }}"
+            </div>
+            <p class="delete-note">Данный товар присутствует в заказах. Удаление невозможно.</p>
+            <a href="{% url 'main_product_list' %}" class="btn btn-primary">Вернуться к списку</a>
+        {% else %}
+            <div class="delete-confirm">
+                Вы уверены, что хотите удалить товар "{{ product.article }}"?
+            </div>
+            <p class="delete-note">Это действие нельзя отменить.</p>
+            
+            <form method="post" class="delete-actions">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Да, удалить</button>
+                <a href="{% url 'main_product_list' %}" class="btn btn-primary">Отмена</a>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

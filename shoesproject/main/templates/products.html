@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}Продукты{% endblock %}
+{% block content %}
+
+<div class="container">
+    {% if is_manager or is_admin %}
+        <div class="filters">
+            <h3>Фильтры и поиск</h3>
+            <form method="get" action="{% url 'main_product_list' %}" id="filter-form">
+                <div class="filter-group">
+                    <input type="text" 
+                        name="search"
+                        id="search-input"
+                        placeholder="Поиск по товарам..." 
+                        class="form-control"
+                        value="{{ search }}">
+                    
+                    <select name="provider" class="form-control" id="provider-select">
+                        <option value="">Все поставщики</option>
+                        {% for provider in providers %}
+                            <option value="{{ provider.id }}" 
+                                {% if selected_provider|stringformat:"s" == provider.id|stringformat:"s" %}selected{% endif %}>
+                                {{ provider.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    
+                    <select name="sort" class="form-control" id="sort-select">
+                        <option value="">Без сортировки</option>
+                        <option value="price_asc" {% if selected_sort == 'price_asc' %}selected{% endif %}>Цена (по возрастанию)</option>
+                        <option value="price_desc" {% if selected_sort == 'price_desc' %}selected{% endif %}>Цена (по убыванию)</option>
+                        <option value="name_asc" {% if selected_sort == 'name_asc' %}selected{% endif %}>Название (А-Я)</option>
+                        <option value="name_desc" {% if selected_sort == 'name_desc' %}selected{% endif %}>Название (Я-А)</option>
+                        <option value="stock_asc" {% if selected_sort == 'stock_asc' %}selected{% endif %}>На складе (сначала мало)</option>
+                        <option value="stock_desc" {% if selected_sort == 'stock_desc' %}selected{% endif %}>На складе (сначала много)</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+    {% if is_admin %}
+    <div class="admin-actions">
+        <a href="{% url 'main_product_add' %}" class="btn btn-success">Добавить товар</a>
+    </div>
+    {% endif %}
+    <div class="products-list">
+        {% for product in products %}
+        <div class="product-card {% if product.storage_count == 0 %}out-of-stock{% elif product.current_discount > 15 %}discount-high{% endif %}">
+            <div class="product-image-container">
+                {% if product.img_path %}
+                    <img src="{{ MEDIA_URL }}{{ product.img_path }}" alt="{{ product.article }}" class="product-image-large">
+                {% else %}
+                    <img src="{{ MEDIA_URL }}picture.png" alt="{{ product.article }}" class="product-image-large">
+                {% endif %}
+            </div>
+            
+            <div class="product-info">
+                <div class="product-header">
+                    <span class="product-category-name">{{ product.category.name }} | {{ product.product_type.name }}</span>
+                </div>
+                
+                <div class="product-description">
+                    <span class="info-label">Описание товара:</span> {{ product.description|default:"Нет описания" }}
+                </div>
+                
+                <div class="product-manufacturer">
+                    <span class="info-label">Производитель:</span> {{ product.manufacturer.name }}
+                </div>
+                
+                <div class="product-supplier">
+                    <span class="info-label">Поставщик:</span> {{ product.provider.name }}
+                </div>
+                
+                <div class="product-price">
+                    <span class="info-label">Цена:</span>
+                    {% if product.current_discount > 0 %}
+                        <span class="old-price">{{ product.price }}</span>
+                        <span class="final-price">{{ product.discounted_price|floatformat:2 }}</span>
+                    {% else %}
+                        {{ product.price }}
+                    {% endif %}
+                </div>
+                
+                <div class="product-unit">
+                    <span class="info-label">Единица измерения:</span> {{ product.unit.name }}
+                </div>
+                <div class="product-stock">
+                    <span class="info-label">Количество на складе:</span> {{ product.storage_count }}
+                </div>
+            </div>
+            
+            <div class="product-discount">
+                <div class="discount-label">Действующая скидка</div>
+                <div class="discount-value">{{ product.current_discount }}%</div>
+            </div>
+            
+            {% if is_admin %}
+            <div class="product-actions">
+                <a href="{% url 'main_product_edit' product.id  %}" class="btn btn-primary">Редактировать</a>
+                <a href="{% url 'main_product_delete' product.id  %}" class="btn btn-danger">Удалить</a>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% if is_manager or is_admin %}
+<script>
+    function applyFilters() {
+        const search = document.getElementById('search-input').value;
+        const provider = document.getElementById('provider-select').value;
+        const sort = document.getElementById('sort-select').value;
+        
+        window.location.href = `{% url 'main_product_list' %}?search=${encodeURIComponent(search)}&provider=${provider}&sort=${sort}`;
+    }
+    
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search-input');
+        const providerSelect = document.getElementById('provider-select');
+        const sortSelect = document.getElementById('sort-select');
+        
+        let timeout = null;
+        
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(applyFilters, 500);
+            });
+        }
+        
+        if (providerSelect) {
+            providerSelect.addEventListener('change', applyFilters);
+        }
+        
+        if (sortSelect) {
+            sortSelect.addEventListener('change', applyFilters);
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}
